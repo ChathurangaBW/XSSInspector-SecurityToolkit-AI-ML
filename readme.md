@@ -75,6 +75,9 @@ Analyzes web page content to identify forms and input fields that could be susce
 ### Form and Input Extraction
 Extracts details of forms and input fields to better target XSS injection points.
 
+### Automated Form Scanning
+Forms discovered through NLP analysis are now automatically tested with generated payloads to improve detection accuracy.
+
 ## Reinforcement Learning
 
 ### Adaptive Learning
