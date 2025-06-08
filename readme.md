@@ -65,7 +65,7 @@ Built-in HTTP verb tampering to check for vulnerabilities, using known and unkno
 Utilizes neural networks to predict vulnerabilities based on complex features.
 
 ### Model Training and Prediction
-Trains models on past scan results and uses them to filter and prioritize URLs for scanning.
+Trains models on past scan results and uses them to filter and prioritize URLs for scanning. Feature extraction now includes average parameter name and value lengths for improved accuracy.
 
 ## Natural Language Processing (NLP)
 
@@ -81,7 +81,7 @@ Forms discovered through NLP analysis are now automatically tested with generate
 ## Reinforcement Learning
 
 ### Adaptive Learning
-Learns from each scanning attempt to improve payload selection and application over time.
+Learns from each scanning attempt to improve payload selection and application over time. Payloads with higher success rates are automatically prioritized.
 
 ### History-Based Adjustments
 Adjusts future payload selection based on the success of past attempts.

@@ -10,7 +10,7 @@ class DeepLearningModel:
 
     def build_model(self):
         model = Sequential()
-        model.add(Input(shape=(2,)))  # Adjust input shape to match features
+        model.add(Input(shape=(4,)))  # Adjusted to match enhanced feature set
         model.add(Dense(64, activation='relu'))
         model.add(Dense(32, activation='relu'))
         model.add(Dense(1, activation='sigmoid'))

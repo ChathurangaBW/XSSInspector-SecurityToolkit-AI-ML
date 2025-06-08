@@ -420,13 +420,18 @@ class XSSScanner:
         return filtered_urls
 
     def extract_features(self, query_params):
-        features = [len(query_params)]
-        if query_params:
-            first_param = list(query_params.keys())[0]
-            features.append(len(first_param))
-        else:
-            features.append(0)
-        return features
+        count = len(query_params)
+        if not query_params:
+            return [0, 0, 0, 0]
+
+        name_lengths = [len(name) for name in query_params.keys()]
+        value_lengths = [len(v[0]) if isinstance(v, list) and v else 0 for v in query_params.values()]
+        digit_params = sum(1 for name in query_params.keys() if any(ch.isdigit() for ch in name))
+
+        avg_name_len = sum(name_lengths) / len(name_lengths)
+        avg_value_len = sum(value_lengths) / len(value_lengths)
+
+        return [count, avg_name_len, avg_value_len, digit_params]
 
     def detect_server(self, url):
         try:
@@ -455,6 +460,7 @@ class XSSScanner:
     def scan_urls_for_xss(self, url):
         server_type = self.detect_server(url)
         self.payloads = generate_payloads(server_type)
+        self.payloads = self.rl_agent.rank_payloads(self.payloads)
         if not self.payloads:
             print(f"{RED}[ERROR]{END} No payloads generated for testing.")
             return
