@@ -463,6 +463,7 @@ class XSSScanner:
         query_params = parse_qs(parsed_url.query)
         headers = {'User-Agent': random.choice(USER_AGENTS)}
 
+        # Scan query parameters
         for param, values in query_params.items():
             for payload in self.payloads:
                 for method in self.methods:
@@ -495,6 +496,45 @@ class XSSScanner:
 
                     except requests.RequestException as e:
                         logging.error(f"Failed to test {url} with {method}: {str(e)}")
+
+        # Scan forms discovered via NLP analysis
+        forms = analyze_content(url)
+        for form in forms:
+            action = form.get('action') or url
+            action_url = urljoin(url, action)
+            inputs = form.find_all('input')
+            input_names = [i.get('name') for i in inputs if i.get('name')]
+            for payload in self.payloads:
+                data = {name: payload for name in input_names}
+                for method in ['GET', 'POST']:
+                    try:
+                        start_time = time.time()
+                        if method == 'GET':
+                            response = requests.get(action_url, params=data, headers=headers, verify=False, timeout=10)
+                        else:
+                            response = requests.post(action_url, data=data, headers=headers, verify=False, timeout=10)
+                        response_time = time.time() - start_time
+                        success = response.status_code == 200 and payload in response.text
+
+                        logging.info(f"Testing form {action_url} with payload {payload} using method {method}. Success: {success}")
+
+                        self.scan_results.append({'query_params': data, 'success': int(success)})
+
+                        if success:
+                            xss_type = self.determine_xss_type(action_url, ','.join(data.keys()), payload, response)
+                            self.vulnerable_urls.append((action_url, payload, method))
+                            insert_vulnerability_data(action_url, payload, method, xss_type, int(success))
+                            with open('audit_links.txt', 'a') as file:
+                                file.write(f"{action_url},{payload},{method},{xss_type}\n")
+                        else:
+                            logging.info(f"No XSS vulnerability detected for form {action_url} with payload {payload} using method {method}")
+
+                        self.rl_agent.learn(action_url, ','.join(data.keys()), payload, method, success)
+
+                        insert_training_data(action_url, ','.join(data.keys()), payload, server_type, method, response.status_code, response_time, response.text, int(success), response.text[:100], int(success))
+
+                    except requests.RequestException as e:
+                        logging.error(f"Failed to test form {action_url} with {method}: {str(e)}")
 
     def start_scan(self):
         if self.use_model and self.model:
